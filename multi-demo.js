@@ -129,10 +129,31 @@ function connectSingleBroker(i) {
     }
 }
 
+// Fetch and replay historical messages for a broker
+async function loadHistoricalMessages(brokerIdx) {
+  try {
+    const response = await fetch(`http://localhost:3001/api/messages?brokerId=${brokerIdx}`);
+    const messages = await response.json();
+    messages.reverse().forEach(msg => {
+      const fakeMessage = {
+        destinationName: msg.topic,
+        payloadString: typeof msg.payload === 'string' 
+          ? msg.payload 
+          : JSON.stringify(msg.payload)
+      };
+      onMessageArrived(brokerIdx, fakeMessage);
+    });
+  } catch (error) {
+    console.error('Failed to load historical messages:', error);
+  }
+}
+
 function onConnect(idx, client, topic1, topic2) {
     updateConnectionIndicator(idx, 'online');
     brokerStates[idx-1].reconnectAttempts = 0;
     logStatus(`Broker ${idx}: Connected`, "success");
+    // Load historical messages
+    loadHistoricalMessages(idx);
     // Update topic display names
     document.getElementById(`topic1_${idx}_name`).textContent = topic1 || "PMU Topic";
     document.getElementById(`topic2_${idx}_name`).textContent = topic2 || "Status Topic";

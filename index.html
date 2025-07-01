@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>PMU Multi-Host Monitoring</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.2/mqttws31.min.js"></script>
+    <script src="multi-demo.js"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="header">
+            <h1><i class="fas fa-bolt"></i> PMU Multi-Host Monitoring</h1>
+            <p class="subtitle">University of Cape Town - Power Systems Laboratory</p>
+        </div>
+
+        <div class="config-panel">
+            <form id="connection-information-form">
+                <div class="config-grid">
+                    <!-- Broker Configs -->
+                    <!-- Repeat for each broker -->
+                    <div class="config-section" id="broker1-config">
+                        <h3><i class="fas fa-server"></i> Broker #1</h3>
+                        <div class="connection-indicator">
+                            <span id="connection_indicator1" class="status-dot offline"></span>
+                            <span id="connection_text1">Offline</span>
+                        </div>
+                        <div class="input-group"><label for="host1">Host:</label><input id="host1" type="text" placeholder="Host"></div>
+                        <div class="input-group"><label for="port1">Port:</label><input id="port1" type="text" value="8884" placeholder="Port"></div>
+                        <div class="input-group"><label for="username1">Username:</label><input id="username1" type="text" placeholder="Username"></div>
+                        <div class="input-group"><label for="password1">Password:</label><input id="password1" type="password" placeholder="Password"></div>
+                        <div class="input-group"><label for="clientId1">Client ID:</label><input id="clientId1" type="text" placeholder="Client ID"><button type="button" class="generate-btn" onclick="generateClientId(1)"><i class="fas fa-random"></i> Generate</button></div>
+                        <div class="input-group"><label for="topic1_1">PMU Topic:</label><input id="topic1_1" type="text" placeholder="PMU Topic"></div>
+                        <div class="input-group"><label for="topic2_1">Status Topic:</label><input id="topic2_1" type="text" placeholder="Status Topic"></div>
+                        <div class="control-buttons">
+                            <button type="button" onclick="startConnect(1)" class="btn-connect"><i class="fas fa-plug"></i> Connect</button>
+                            <button type="button" onclick="startDisconnect(1)" class="btn-disconnect"><i class="fas fa-unlink"></i> Disconnect</button>
+                        </div>
+                    </div>
+                    <div class="config-section" id="broker2-config">
+                        <h3><i class="fas fa-server"></i> Broker #2</h3>
+                        <div class="connection-indicator">
+                            <span id="connection_indicator2" class="status-dot offline"></span>
+                            <span id="connection_text2">Offline</span>
+                        </div>
+                        <div class="input-group"><label for="host2">Host:</label><input id="host2" type="text" placeholder="Host"></div>
+                        <div class="input-group"><label for="port2">Port:</label><input id="port2" type="text" value="8884" placeholder="Port"></div>
+                        <div class="input-group"><label for="username2">Username:</label><input id="username2" type="text" placeholder="Username"></div>
+                        <div class="input-group"><label for="password2">Password:</label><input id="password2" type="password" placeholder="Password"></div>
+                        <div class="input-group"><label for="clientId2">Client ID:</label><input id="clientId2" type="text" placeholder="Client ID"><button type="button" class="generate-btn" onclick="generateClientId(2)"><i class="fas fa-random"></i> Generate</button></div>
+                        <div class="input-group"><label for="topic1_2">PMU Topic:</label><input id="topic1_2" type="text" placeholder="PMU Topic"></div>
+                        <div class="input-group"><label for="topic2_2">Status Topic:</label><input id="topic2_2" type="text" placeholder="Status Topic"></div>
+                        <div class="control-buttons">
+                            <button type="button" onclick="startConnect(2)" class="btn-connect"><i class="fas fa-plug"></i> Connect</button>
+                            <button type="button" onclick="startDisconnect(2)" class="btn-disconnect"><i class="fas fa-unlink"></i> Disconnect</button>
+                        </div>
+                    </div>
+                    <div class="config-section" id="broker3-config">
+                        <h3><i class="fas fa-server"></i> Broker #3</h3>
+                        <div class="connection-indicator">
+                            <span id="connection_indicator3" class="status-dot offline"></span>
+                            <span id="connection_text3">Offline</span>
+                        </div>
+                        <div class="input-group"><label for="host3">Host:</label><input id="host3" type="text" placeholder="Host"></div>
+                        <div class="input-group"><label for="port3">Port:</label><input id="port3" type="text" value="8884" placeholder="Port"></div>
+                        <div class="input-group"><label for="username3">Username:</label><input id="username3" type="text" placeholder="Username"></div>
+                        <div class="input-group"><label for="password3">Password:</label><input id="password3" type="password" placeholder="Password"></div>
+                        <div class="input-group"><label for="clientId3">Client ID:</label><input id="clientId3" type="text" placeholder="Client ID"><button type="button" class="generate-btn" onclick="generateClientId(3)"><i class="fas fa-random"></i> Generate</button></div>
+                        <div class="input-group"><label for="topic1_3">PMU Topic:</label><input id="topic1_3" type="text" placeholder="PMU Topic"></div>
+                        <div class="input-group"><label for="topic2_3">Status Topic:</label><input id="topic2_3" type="text" placeholder="Status Topic"></div>
+                        <div class="control-buttons">
+                            <button type="button" onclick="startConnect(3)" class="btn-connect"><i class="fas fa-plug"></i> Connect</button>
+                            <button type="button" onclick="startDisconnect(3)" class="btn-disconnect"><i class="fas fa-unlink"></i> Disconnect</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="control-buttons">
+                    <button type="button" onclick="startConnect()" class="btn-connect"><i class="fas fa-plug"></i> Connect All</button>
+                    <button type="button" onclick="startDisconnect()" class="btn-disconnect"><i class="fas fa-unlink"></i> Disconnect All</button>
+                    <button type="button" onclick="clearAll()" class="btn-clear"><i class="fas fa-broom"></i> Clear All</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="publish-section">
+            <h3><i class="fas fa-paper-plane"></i> Publish Message</h3>
+            <div class="publish-controls">
+                <input id="publish_broker" type="number" min="1" max="3" value="1" style="width:60px;" title="Broker #">
+                <input id="publish_topic" type="text" placeholder="Publish topic (e.g., Sensor_data)">
+                <input id="publish_message" type="text" placeholder="Message content">
+                <button type="button" onclick="publishMessage()" class="btn-publish"><i class="fas fa-share-square"></i> Publish</button>
+            </div>
+        </div>
+
+        <div class="monitoring-grid">
+            <!-- For each broker, two panels: PMU Data and Device Status -->
+            <div class="monitor-panel pmu-data">
+                <div class="panel-header">
+                    <h3><i class="fas fa-chart-line"></i> Broker #1 PMU Data</h3>
+                    <span class="topic-name" id="topic1_1_name"></span>
+                </div>
+                <div class="message-display" id="topic1_1_messages">
+                    <div class="no-data"><i class="fas fa-clock"></i> Waiting for PMU data...</div>
+                </div>
+                <div class="panel-controls">
+                    <button type="button" onclick="clearTopicMessages(1,1)" class="btn-clear-small"><i class="fas fa-trash"></i> Clear</button>
+                    <span class="message-count">Messages: <span id="topic1_1_count">0</span></span>
+                </div>
+            </div>
+            <div class="monitor-panel device-status">
+                <div class="panel-header">
+                    <h3><i class="fas fa-heartbeat"></i> Broker #1 Device Status</h3>
+                    <span class="topic-name" id="topic2_1_name"></span>
+                </div>
+                <div class="message-display" id="topic2_1_messages">
+                    <div class="no-data"><i class="fas fa-clock"></i> Waiting for device status...</div>
+                </div>
+                <div class="panel-controls">
+                    <button type="button" onclick="clearTopicMessages(1,2)" class="btn-clear-small"><i class="fas fa-trash"></i> Clear</button>
+                    <span class="message-count">Messages: <span id="topic2_1_count">0</span></span>
+                </div>
+            </div>
+            <div class="monitor-panel pmu-data">
+                <div class="panel-header">
+                    <h3><i class="fas fa-chart-line"></i> Broker #2 PMU Data</h3>
+                    <span class="topic-name" id="topic1_2_name"></span>
+                </div>
+                <div class="message-display" id="topic1_2_messages">
+                    <div class="no-data"><i class="fas fa-clock"></i> Waiting for PMU data...</div>
+                </div>
+                <div class="panel-controls">
+                    <button type="button" onclick="clearTopicMessages(2,1)" class="btn-clear-small"><i class="fas fa-trash"></i> Clear</button>
+                    <span class="message-count">Messages: <span id="topic1_2_count">0</span></span>
+                </div>
+            </div>
+            <div class="monitor-panel device-status">
+                <div class="panel-header">
+                    <h3><i class="fas fa-heartbeat"></i> Broker #2 Device Status</h3>
+                    <span class="topic-name" id="topic2_2_name"></span>
+                </div>
+                <div class="message-display" id="topic2_2_messages">
+                    <div class="no-data"><i class="fas fa-clock"></i> Waiting for device status...</div>
+                </div>
+                <div class="panel-controls">
+                    <button type="button" onclick="clearTopicMessages(2,2)" class="btn-clear-small"><i class="fas fa-trash"></i> Clear</button>
+                    <span class="message-count">Messages: <span id="topic2_2_count">0</span></span>
+                </div>
+            </div>
+            <div class="monitor-panel pmu-data">
+                <div class="panel-header">
+                    <h3><i class="fas fa-chart-line"></i> Broker #3 PMU Data</h3>
+                    <span class="topic-name" id="topic1_3_name"></span>
+                </div>
+                <div class="message-display" id="topic1_3_messages">
+                    <div class="no-data"><i class="fas fa-clock"></i> Waiting for PMU data...</div>
+                </div>
+                <div class="panel-controls">
+                    <button type="button" onclick="clearTopicMessages(3,1)" class="btn-clear-small"><i class="fas fa-trash"></i> Clear</button>
+                    <span class="message-count">Messages: <span id="topic1_3_count">0</span></span>
+                </div>
+            </div>
+            <div class="monitor-panel device-status">
+                <div class="panel-header">
+                    <h3><i class="fas fa-heartbeat"></i> Broker #3 Device Status</h3>
+                    <span class="topic-name" id="topic2_3_name"></span>
+                </div>
+                <div class="message-display" id="topic2_3_messages">
+                    <div class="no-data"><i class="fas fa-clock"></i> Waiting for device status...</div>
+                </div>
+                <div class="panel-controls">
+                    <button type="button" onclick="clearTopicMessages(3,2)" class="btn-clear-small"><i class="fas fa-trash"></i> Clear</button>
+                    <span class="message-count">Messages: <span id="topic2_3_count">0</span></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="system-logs">
+            <div class="panel-header">
+                <h3><i class="fas fa-terminal"></i> System Logs</h3>
+                <button type="button" onclick="clearConnectionStatus()" class="btn-clear-small"><i class="fas fa-trash"></i> Clear Logs</button>
+            </div>
+            <div class="log-display" id="connection_status">
+                <div class="system-ready"><i class="fas fa-check-circle"></i> System ready for connection</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

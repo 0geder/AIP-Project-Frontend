@@ -21,18 +21,18 @@
                     <!-- Broker Configs -->
                     <!-- Repeat for each broker -->
                     <div class="config-section" id="broker1-config">
-                        <h3><i class="fas fa-server"></i> Broker #1 (HiveMQ)</h3>
+                        <h3><i class="fas fa-server"></i> Broker #1</h3>
                         <div class="connection-indicator">
                             <span id="connection_indicator1" class="status-dot offline"></span>
                             <span id="connection_text1">Offline</span>
                         </div>
-                        <div class="input-group"><label for="host1">Host:</label><input id="host1" type="text" value="d3131c8a9ea94df0972f5f4e5e0622ad.s1.eu.hivemq.cloud" placeholder="Host"></div>
+                        <div class="input-group"><label for="host1">Host:</label><input id="host1" type="text" placeholder="Host"></div>
                         <div class="input-group"><label for="port1">Port:</label><input id="port1" type="text" value="8884" placeholder="Port"></div>
-                        <div class="input-group"><label for="username1">Username:</label><input id="username1" type="text" value="PMU_UCT_Demo" placeholder="Username"></div>
-                        <div class="input-group"><label for="password1">Password:</label><input id="password1" type="password" value="CivilSucks100%" placeholder="Password"></div>
+                        <div class="input-group"><label for="username1">Username:</label><input id="username1" type="text" placeholder="Username"></div>
+                        <div class="input-group"><label for="password1">Password:</label><input id="password1" type="password" placeholder="Password"></div>
                         <div class="input-group"><label for="clientId1">Client ID:</label><input id="clientId1" type="text" placeholder="Client ID"><button type="button" class="generate-btn" onclick="generateClientId(1)"><i class="fas fa-random"></i> Generate</button></div>
-                        <div class="input-group"><label for="topic1_1">PMU Topic:</label><input id="topic1_1" type="text" value="Sensor_data" placeholder="PMU Topic"></div>
-                        <div class="input-group"><label for="topic2_1">Status Topic:</label><input id="topic2_1" type="text" value="device/status" placeholder="Status Topic"></div>
+                        <div class="input-group"><label for="topic1_1">PMU Topic:</label><input id="topic1_1" type="text" placeholder="PMU Topic"></div>
+                        <div class="input-group"><label for="topic2_1">Status Topic:</label><input id="topic2_1" type="text" placeholder="Status Topic"></div>
                         <div class="control-buttons">
                             <button type="button" onclick="startConnect(1)" class="btn-connect"><i class="fas fa-plug"></i> Connect</button>
                             <button type="button" onclick="startDisconnect(1)" class="btn-disconnect"><i class="fas fa-unlink"></i> Disconnect</button>

@@ -315,13 +315,10 @@ button[type=button]:hover {
 }
 
 .message-item {
-    background: white;
-    border-radius: 8px;
-    padding: 12px;
     margin-bottom: 10px;
-    border-left: 4px solid #dee2e6;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    transition: all 0.3s ease;
+    padding: 10px;
+    border-radius: 5px;
+    animation: fadeIn 0.3s ease-out;
 }
 
 .message-item:hover {
@@ -330,13 +327,13 @@ button[type=button]:hover {
 }
 
 .pmu-message {
-    border-left-color: #FF9800;
-    background: linear-gradient(135deg, #fff8e1 0%, #ffffff 100%);
+    background-color: #fff8e1;
+    border-left: 4px solid #FF9800;
 }
 
 .status-message {
-    border-left-color: #9C27B0;
-    background: linear-gradient(135deg, #f3e5f5 0%, #ffffff 100%);
+    background-color: #f3e5f5;
+    border-left: 4px solid #9C27B0;
 }
 
 .message-header {
@@ -632,4 +629,26 @@ button[type=button]:hover {
     animation: spin 1s linear infinite;
     top: -4px;
     left: -4px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.btn-refresh-small {
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+    color: white;
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-right: 8px;
+}
+
+.btn-refresh-small:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(33, 150, 243, 0.3);
 }

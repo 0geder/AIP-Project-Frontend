@@ -129,26 +129,70 @@ function connectSingleBroker(i) {
     }
 }
 
+async function fetchHistoricalData(brokerIdx) {
+  try {
+    logStatus(`Broker ${brokerIdx}: Fetching historical data...`, "info");
+    
+    const response = await fetch(`http://localhost:3001/api/pmu-data`);
+    if (!response.ok) throw new Error('Network response was not ok');
+    
+    const data = await response.json();
+    const display = document.getElementById(`topic1_${brokerIdx}_messages`);
+    
+    // Clear existing messages but keep "no-data" message if empty
+    display.innerHTML = display.querySelector('.no-data') ? 
+      display.querySelector('.no-data').outerHTML : '';
+    
+    // Add historical messages
+    data.forEach(item => {
+      const formatted = formatPMUData(JSON.stringify(item));
+      display.innerHTML += `
+        <div class='message-item pmu-message'>
+          <div class='message-header'>
+            <span class='message-time'>${new Date(item.timestamp).toLocaleTimeString()}</span>
+            <span class='message-topic'>Historical Data</span>
+          </div>
+          <div class='message-content'>${formatted}</div>
+        </div>
+      `;
+    });
+    
+    // Update count
+    const countElement = document.getElementById(`topic1_${brokerIdx}_count`);
+    countElement.textContent = (parseInt(countElement.textContent) + data.length).toString();
+    
+    logStatus(`Broker ${brokerIdx}: Loaded ${data.length} historical records`, "success");
+  } catch (error) {
+    logStatus(`Broker ${brokerIdx}: Failed to load historical data - ${error.message}`, "error");
+  }
+}
+
 function onConnect(idx, client, topic1, topic2) {
     updateConnectionIndicator(idx, 'online');
     brokerStates[idx-1].reconnectAttempts = 0;
     logStatus(`Broker ${idx}: Connected`, "success");
+    
+    // Load historical data when connecting
+    fetchHistoricalData(idx);
+    
     // Update topic display names
     document.getElementById(`topic1_${idx}_name`).textContent = topic1 || "PMU Topic";
     document.getElementById(`topic2_${idx}_name`).textContent = topic2 || "Status Topic";
-    if (topic1) {
-        client.subscribe(topic1, {
-            onSuccess: () => logStatus(`Broker ${idx}: Subscribed to ${topic1}`, "success"),
-            onFailure: (err) => logStatus(`Broker ${idx}: Failed to subscribe to ${topic1}: ${err.errorMessage}`, "error")
-        });
-    }
-    if (topic2) {
-        client.subscribe(topic2, {
-            onSuccess: () => logStatus(`Broker ${idx}: Subscribed to ${topic2}`, "success"),
-            onFailure: (err) => logStatus(`Broker ${idx}: Failed to subscribe to ${topic2}: ${err.errorMessage}`, "error")
-        });
-    }
-    // Hide no-data
+    
+    // Subscribe to topics if they exist
+    const subscribeToTopic = (topic, type) => {
+        if (topic) {
+            client.subscribe(topic, {
+                onSuccess: () => logStatus(`Broker ${idx}: Subscribed to ${topic}`, "success"),
+                onFailure: (err) => logStatus(`Broker ${idx}: Failed to subscribe to ${topic}: ${err.errorMessage}`, "error")
+            });
+        }
+    };
+    
+    subscribeToTopic(topic1, 'PMU Data');
+    subscribeToTopic(topic2, 'Device Status');
+    
+    // Hide no-data messages
     document.getElementById(`topic1_${idx}_messages`).querySelector('.no-data').style.display = 'none';
     document.getElementById(`topic2_${idx}_messages`).querySelector('.no-data').style.display = 'none';
 }
@@ -179,23 +223,49 @@ function onMessageArrived(idx, message) {
     const topic = message.destinationName;
     const payload = message.payloadString;
     let formattedMessage = payload;
-    if (topic === brokerStates[idx-1].topic1) {
+    
+    // Check if this is one of our subscribed topics
+    const brokerState = brokerStates[idx-1];
+    let isSubscribedTopic = false;
+    
+    if (topic === brokerState.topic1) {
         formattedMessage = formatPMUData(payload);
-        brokerStates[idx-1].topic1Count++;
-        document.getElementById(`topic1_${idx}_count`).textContent = brokerStates[idx-1].topic1Count;
+        brokerState.topic1Count++;
+        document.getElementById(`topic1_${idx}_count`).textContent = brokerState.topic1Count;
         const display = document.getElementById(`topic1_${idx}_messages`);
-        display.innerHTML += `<div class='message-item pmu-message'><div class='message-header'><span class='message-time'>${new Date().toLocaleTimeString()}</span><span class='message-topic'>${topic}</span></div><div class='message-content'>${formattedMessage}</div></div>`;
+        display.innerHTML += createMessageHtml(topic, formattedMessage, 'pmu-message');
         display.scrollTop = display.scrollHeight;
-    } else if (topic === brokerStates[idx-1].topic2) {
+        isSubscribedTopic = true;
+    } 
+    else if (topic === brokerState.topic2) {
         formattedMessage = formatDeviceStatus(payload);
-        brokerStates[idx-1].topic2Count++;
-        document.getElementById(`topic2_${idx}_count`).textContent = brokerStates[idx-1].topic2Count;
+        brokerState.topic2Count++;
+        document.getElementById(`topic2_${idx}_count`).textContent = brokerState.topic2Count;
         const display = document.getElementById(`topic2_${idx}_messages`);
-        display.innerHTML += `<div class='message-item status-message'><div class='message-header'><span class='message-time'>${new Date().toLocaleTimeString()}</span><span class='message-topic'>${topic}</span></div><div class='message-content'>${formattedMessage}</div></div>`;
+        display.innerHTML += createMessageHtml(topic, formattedMessage, 'status-message');
         display.scrollTop = display.scrollHeight;
-    } else {
-        logStatus(`Broker ${idx}: Message on unknown topic ${topic}: ${payload}`, "data");
+        isSubscribedTopic = true;
     }
+    
+    // Log all received messages, not just subscribed ones
+    logStatus(`Broker ${idx}: Message received from ${topic}: ${formattedMessage}`, "data");
+    
+    if (!isSubscribedTopic) {
+        // If message is from an unsubscribed topic, log it in system logs
+        logStatus(`Broker ${idx}: Message from unsubscribed topic ${topic}: ${formattedMessage}`, "warning");
+    }
+}
+
+function createMessageHtml(topic, content, type) {
+    return `
+        <div class='message-item ${type}'>
+            <div class='message-header'>
+                <span class='message-time'>${new Date().toLocaleTimeString()}</span>
+                <span class='message-topic'>${topic}</span>
+            </div>
+            <div class='message-content'>${content}</div>
+        </div>
+    `;
 }
 
 function startDisconnect(idx) {
@@ -251,24 +321,40 @@ function clearConnectionStatus() {
 
 function publishMessage() {
     const brokerIdx = Number(document.getElementById("publish_broker").value);
-    const topic = document.getElementById("publish_topic").value;
-    const msg = document.getElementById("publish_message").value;
+    const topic = document.getElementById("publish_topic").value.trim();
+    const msg = document.getElementById("publish_message").value.trim();
+    
     if (!brokerIdx || brokerIdx < 1 || brokerIdx > 3) {
         logStatus("Select a valid broker (1-3) to publish.", "error");
         return;
     }
+    
     if (!clients[brokerIdx-1] || !clients[brokerIdx-1].isConnected()) {
         logStatus(`Broker ${brokerIdx}: Not connected. Cannot publish.`, "error");
         return;
     }
+    
     if (!topic || !msg) {
         logStatus("Topic and message required to publish.", "error");
         return;
     }
-    const message = new Paho.MQTT.Message(msg);
-    message.destinationName = topic;
-    clients[brokerIdx-1].send(message);
-    logStatus(`Broker ${brokerIdx}: Published to ${topic}`, "success");
+    
+    try {
+        const message = new Paho.MQTT.Message(msg);
+        message.destinationName = topic;
+        message.qos = 1; // Ensure message delivery
+        clients[brokerIdx-1].send(message);
+        
+        logStatus(`Broker ${brokerIdx}: Published to ${topic}`, "success");
+        document.getElementById("publish_message").value = ""; // Clear message input
+        
+        // Auto-scroll to see the published message
+        const logDisplay = document.getElementById("connection_status");
+        logDisplay.scrollTop = logDisplay.scrollHeight;
+        
+    } catch (error) {
+        logStatus(`Broker ${brokerIdx}: Publish failed - ${error.message}`, "error");
+    }
 }
 
 // On page load, generate default client IDs and set indicators
@@ -276,9 +362,18 @@ window.onload = function() {
     for (let i = 1; i <= 3; i++) {
         generateClientId(i);
         updateConnectionIndicator(i, 'offline');
-        document.getElementById(`topic1_${i}_name`).textContent = '';
-        document.getElementById(`topic2_${i}_name`).textContent = '';
+        
+        // Set default values for Broker #1 (HiveMQ)
+        if (i === 1) {
+            document.getElementById(`host${i}`).value = "d3131c8a9ea94df0972f5f4e5e0622ad.s1.eu.hivemq.cloud";
+            document.getElementById(`port${i}`).value = "8884";
+            document.getElementById(`username${i}`).value = "PMU_UCT_Demo";
+            document.getElementById(`password${i}`).value = "CivilSucks100%";
+            document.getElementById(`topic1_${i}`).value = "hi";
+            document.getElementById(`topic2_${i}`).value = "device/status";
+        }
     }
     clearAll();
     logStatus("Dashboard initialized. Ready to connect.", "info");
+    logStatus("Broker #1 pre-configured for HiveMQ (topic: 'hi')", "info");
 };
